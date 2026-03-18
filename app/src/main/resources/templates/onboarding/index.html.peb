@@ -64,7 +64,15 @@
         padding-bottom: 0.25em;
     }
     div.sidebar-timeline .timeline-item .timeline-content {
-        padding-top: 1.2em;
+        padding-top: 0;
+        display: flex;
+        align-items: center;
+        min-height: 1.5em;
+    }
+    div.sidebar-timeline .timeline-item .timeline-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>
 {% endblock %}

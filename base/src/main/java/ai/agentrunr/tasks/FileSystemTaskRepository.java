@@ -96,6 +96,17 @@ public class FileSystemTaskRepository implements TaskRepository {
         }
     }
 
+    @Override
+    public void deleteRecurringTask(String name) {
+        String validName = sanitizeName(name);
+        Path path = taskDir.resolve("recurring").resolve(validName + ".md");
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete recurring task file: " + path, e);
+        }
+    }
+
     // --- private helpers ---
 
     private Path buildTaskPath(Task task) {

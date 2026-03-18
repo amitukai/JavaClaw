@@ -34,6 +34,8 @@ public class TaskTool {
 
         void recurringTaskCreated(String cronExpression, String name, String description);
 
+        default void recurringTaskDeleted(String name) {}
+
     }
 
     @Tool(description = """
@@ -97,6 +99,23 @@ public class TaskTool {
         } catch (Exception e) {
             logger.error("Failed to schedule recurring task", e);
             return "Error: Could not schedule recurring task. " + e.getMessage();
+        }
+    }
+
+    @Tool(description = """
+            Deletes a recurring task by name, stopping it from running in the future.
+            This removes both the scheduled job and the task file.
+
+            - name: The name of the recurring task to delete (e.g., 'email-summary').
+            """)
+    public String deleteRecurringTask(String name) {
+        try {
+            this.taskManager.deleteRecurringTask(name);
+            ofNullable(taskEventHandler).ifPresent(x -> x.recurringTaskDeleted(name));
+            return String.format("Recurring task '%s' has been deleted successfully.", name);
+        } catch (Exception e) {
+            logger.error("Failed to delete recurring task", e);
+            return "Error: Could not delete recurring task. " + e.getMessage();
         }
     }
 

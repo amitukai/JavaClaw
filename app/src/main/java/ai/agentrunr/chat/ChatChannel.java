@@ -46,9 +46,11 @@ public class ChatChannel implements Channel {
 
     /**
      * Called by the WebSocket handler when a client connects.
+     * Flushes any buffered background messages to the new session.
      */
     public void setWsSession(WebSocketSession session) {
         wsSession.set(session);
+        flushPendingMessages();
     }
 
     /**
@@ -75,10 +77,16 @@ public class ChatChannel implements Channel {
      */
     @Override
     public void sendMessage(String message) {
-        try {
-            sendHtml(buildBackgroundMessageHtml(message));
-        } catch (IOException e) {
-            log.warn("WS push failed, buffering message: {}", e.getMessage());
+        WebSocketSession session = wsSession.get();
+        if (session != null && session.isOpen()) {
+            try {
+                sendHtml(buildBackgroundMessageHtml(message));
+            } catch (IOException e) {
+                log.warn("WS push failed, buffering message: {}", e.getMessage());
+                pendingMessages.add(message);
+            }
+        } else {
+            log.info("No active WebSocket session, buffering message for REST polling");
             pendingMessages.add(message);
         }
     }
@@ -102,6 +110,19 @@ public class ChatChannel implements Channel {
             messages.add(msg);
         }
         return messages;
+    }
+
+    private void flushPendingMessages() {
+        String msg;
+        while ((msg = pendingMessages.poll()) != null) {
+            try {
+                sendHtml(buildBackgroundMessageHtml(msg));
+            } catch (IOException e) {
+                log.warn("Failed to flush pending message: {}", e.getMessage());
+                pendingMessages.add(msg);
+                break;
+            }
+        }
     }
 
     private static String buildBackgroundMessageHtml(String text) {

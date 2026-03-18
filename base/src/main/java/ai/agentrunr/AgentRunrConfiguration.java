@@ -25,6 +25,7 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.model.SpringAIModelProperties;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -67,7 +68,8 @@ public class AgentRunrConfiguration {
                                  TaskManager taskManager,
                                  ConfigurationManager configurationManager,
                                  @Value("${agent.workspace:Unknown}") Resource workspace,
-                                 Optional<BraveWebSearchTool> braveWebSearchToolsObjectProvider
+                                 Optional<BraveWebSearchTool> braveWebSearchToolsObjectProvider,
+                                 @Qualifier("playwrightBrowserTool") Optional<Object> playwrightBrowserTool
     ) throws IOException {
 
         String agentPrompt = workspace.createRelative("AGENT.md").getContentAsString(StandardCharsets.UTF_8) + System.lineSeparator()
@@ -95,6 +97,7 @@ public class AgentRunrConfiguration {
                 );
 
         braveWebSearchToolsObjectProvider.ifPresent(chatClientBuilder::defaultTools);
+        playwrightBrowserTool.ifPresent(chatClientBuilder::defaultTools);
 
         return chatClientBuilder.build();
     }
