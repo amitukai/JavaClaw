@@ -13,10 +13,11 @@ public class IndexController {
         this.environment = environment;
     }
 
-    @GetMapping({"", "/index"})
+    @GetMapping({"/", "/index"})
     public String index() {
         String provider = environment.getProperty("spring.ai.model.chat", "unknown");
-        if (!"unknown".equals(provider)) {
+        boolean onboardingCompleted = environment.getProperty("agent.onboarding.completed", Boolean.class, false);
+        if (!"unknown".equals(provider) || onboardingCompleted) {
             return "redirect:/chat";
         }
         return "redirect:/onboarding/";
