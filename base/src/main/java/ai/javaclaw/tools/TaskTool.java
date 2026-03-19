@@ -39,7 +39,7 @@ public class TaskTool {
 
     @Tool(description = """
             Use this tool to manage high-level tasks that represent major units of work.
-            Tasks are persistent, trackable entities that you can work on.
+            Tasks are persistent, trackable entities that you can work on backed by JobRunr.
             
             ## When to Use:
             - When a user provides a new goal or assignment.
@@ -62,10 +62,10 @@ public class TaskTool {
     }
 
     @Tool(description = """
-            Schedules a task for a specific date and time in the future.
+            Schedules a task using JobRunr for a specific date and time in the future.
             Use this when a user explicitly mentions a time or date (e.g., "Remind me next Monday at 9 AM" or "Schedule at 3pm").
             
-            - executionTime: The specific local date and time when the task should run in this format YYYY-MM-ddTHH:mm:ss (example 2025-03-17T09:00:00).
+            - executionTime: The specific local date and time (without timezone) when the task should run in this format YYYY-MM-ddTHH:mm:ss (example 2025-03-17T09:00:00).
             - name: Short, descriptive identifier (e.g., 'monday-morning-sync').
             - description: Detailed instructions on what the task entails.
             """)
@@ -83,7 +83,7 @@ public class TaskTool {
     }
 
     @Tool(description = """
-            Schedules a task that repeats at regular intervals based on a cron expression.
+            Schedules a task using JobRunr that repeats at regular intervals based on a cron expression.
             Use this for recurring activities like daily reports, weekly checks, etc.
             
             - cronExpression: A standard quartz-style cron expression (e.g., '0 12 * * *' for daily at noon or '* * * * *' for every minute. Do not use ? in a cron expression).
