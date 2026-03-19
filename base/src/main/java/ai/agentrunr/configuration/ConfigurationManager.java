@@ -69,14 +69,14 @@ public class ConfigurationManager {
 
     private Path resolveConfigPath(String location) {
         if (location == null || location.isBlank()) {
-            return Path.of("app", "src", "main", "resources", "application.yaml");
+            return Path.of("app", "src", "main", "resources", "application.private.yaml");
         }
 
         String candidate = location.split(",")[0].trim().replace("file:", "");
         Path path = Path.of(candidate);
 
         if (Files.isDirectory(path) || candidate.endsWith("/")) {
-            return path.resolve("application.yaml");
+            return path.resolve("application.private.yaml");
         }
 
         return path;
