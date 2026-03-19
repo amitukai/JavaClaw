@@ -1,4 +1,4 @@
-rootProject.name = 'AgentRunr'
+rootProject.name = 'JavaClaw'
 
 include 'base'
 include 'plugins'

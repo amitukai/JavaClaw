@@ -77,7 +77,7 @@
                 <aside class="box has-background-dark has-text-white">
                     <div class="brand-lockup mb-5">
                         <p class="is-size-7 has-text-primary has-text-weight-bold is-uppercase mb-1" style="letter-spacing: 0.1em">Setup Wizard</p>
-                        <p class="brand-word mb-0"><span class="brand-agent">Agent</span><span class="brand-runr">Runr</span></p>
+                        <p class="brand-word mb-0"><span class="brand-agent">Java</span><span class="brand-runr">Claw</span></p>
                     </div>
                     <h1 class="title is-3 has-text-white mb-3">Turn a blank install into a ready-to-run assistant.</h1>
                     <p class="has-text-grey-light mb-5">Choose a model provider, save credentials, tune your workspace instructions, and mark onboarding complete for the next restart.</p>

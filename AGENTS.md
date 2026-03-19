@@ -1,4 +1,4 @@
-# AgentRunr - Java Edition of OpenClaw
+# JavaClaw - Java Edition of OpenClaw
 
 This project represents a Java version of OpenClaw. OpenClaw is an open-source, personal AI assistant designed to run on your own devices. It acts as a control plane (Gateway) for an assistant that can interact across multiple communication channels.
 
@@ -36,7 +36,7 @@ root
 
 ---
 
-## Java Implementation Strategy (AgentRunr)
+## Java Implementation Strategy (JavaClaw)
 
 ### Task Management
 - Tasks are stored as Markdown files in the `workspace/tasks` folder.
@@ -56,7 +56,7 @@ User/Agent → TaskManager.create()
 ```
 
 ### Core Components
-- **`TaskManager`** (`base/src/main/java/ai/agentrunr/tasks/TaskManager.java`): Creates, schedules (immediate, specific-time, or cron), and manages recurring tasks. Saves via `TaskRepository`, then enqueues to JobRunr by task ID.
+- **`TaskManager`** (`base/src/main/java/ai/javaclaw/tasks/TaskManager.java`): Creates, schedules (immediate, specific-time, or cron), and manages recurring tasks. Saves via `TaskRepository`, then enqueues to JobRunr by task ID.
 - **`Task`** (`base/.../tasks/Task.java`): Immutable value class. Fields: `id` (absolute file path), `name`, `createdAt`, `status`, `description`. Mutation via `withStatus()` / `withFeedback()`.
 - **`TaskRepository`** (`base/.../tasks/TaskRepository.java`): Interface for task persistence — `save(Task)`, `getTaskById(String)`, `getTasks(LocalDate, Status)`, `save(RecurringTask)`, `getRecurringTaskById(String)`.
 - **`FileSystemTaskRepository`** (`base/.../tasks/FileSystemTaskRepository.java`): Implements `TaskRepository`; handles all file I/O, YAML frontmatter serialization/deserialization, directory management, and filename sanitization.
@@ -77,9 +77,9 @@ User/Agent → TaskManager.create()
 
 ## Agent System
 
-**`DefaultAgent`** (`base/src/main/java/ai/agentrunr/agent/DefaultAgent.java`) wraps Spring AI's `ChatClient`.
+**`DefaultAgent`** (`base/src/main/java/ai/javaclaw/agent/DefaultAgent.java`) wraps Spring AI's `ChatClient`.
 
-**Prompt construction** (`AgentRunrConfiguration.java`):
+**Prompt construction** (`JavaClawConfiguration.java`):
 - System prompt = `workspace/AGENT.md` + `workspace/INFO.md`
 - **Advisors**: `SimpleLoggerAdvisor`, `ToolCallAdvisor`, `MessageChatMemoryAdvisor` (chat history)
 
@@ -119,7 +119,7 @@ Incoming message → ChannelMessageReceivedEvent (channel name, message text)
 
 ## Configuration Management
 
-- **`ConfigurationManager`** (`base/src/main/java/ai/agentrunr/configuration/ConfigurationManager.java`): Updates nested YAML key-value paths in `application.yaml` via SnakeYAML. Publishes `ConfigurationChangedEvent` on update.
+- **`ConfigurationManager`** (`base/src/main/java/ai/javaclaw/configuration/ConfigurationManager.java`): Updates nested YAML key-value paths in `application.yaml` via SnakeYAML. Publishes `ConfigurationChangedEvent` on update.
 - Runtime config file: `app/src/main/resources/application.yaml` (read at startup; mutated by onboarding).
 - Key config paths:
   - `agent.onboarding.completed` — set to `true` after onboarding
@@ -177,4 +177,4 @@ Templates: `templates/onboarding/` (index + 7 step partials). Saves config via `
 
 - `base/src/test/` — `TaskManagerTest`: task creation, file naming, JobRunr integration (in-memory storage + background server).
 - `channels/telegram/src/test/` — `TelegramChannelTest`: unauthorized user rejection, authorized message flow (mocked).
-- `app/src/test/` — `OnboardingControllerTest`: session-based workflow; `AgentRunrApplicationTests`: full Spring context load with Testcontainers.
+- `app/src/test/` — `OnboardingControllerTest`: session-based workflow; `JavaClawApplicationTests`: full Spring context load with Testcontainers.

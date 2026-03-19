@@ -1,6 +1,6 @@
-# AgentRunr
+# JavaClaw
 
-AgentRunr is a Java-based personal AI assistant that runs on your own devices. It acts as a control plane (gateway) for an AI agent that can interact across multiple communication channels, manage tasks, execute shell commands, browse the web, and more — all while keeping your data local.
+JavaClaw is a Java-based personal AI assistant that runs on your own devices. It acts as a control plane (gateway) for an AI agent that can interact across multiple communication channels, manage tasks, execute shell commands, browse the web, and more — all while keeping your data local.
 
 ## Features
 
@@ -32,7 +32,7 @@ AgentRunr is a Java-based personal AI assistant that runs on your own devices. I
 ## Project Structure
 
 ```
-AgentRunr/
+JavaClaw/
 ├── base/           # Core: agent, tasks, tools, channels, config
 ├── app/            # Spring Boot entry point, onboarding UI, web routes, chat channel
 └── plugins/

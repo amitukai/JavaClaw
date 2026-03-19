@@ -149,7 +149,7 @@
         <div class="navbar-brand">
             <span class="navbar-item">
                 <div class="brand-lockup">
-                    <p class="brand-word"><span class="brand-agent">Agent</span><span class="brand-runr">Runr</span></p>
+                    <p class="brand-word"><span class="brand-agent">Java</span><span class="brand-runr">Claw</span></p>
                 </div>
             </span>
         </div>
@@ -175,7 +175,7 @@
             <div id="chat-messages">
                 <article class="ar-msg ar-msg--agent">
                     <div class="ar-msg__avatar">AR</div>
-                    <div class="ar-msg__bubble">Hi! I'm your AgentRunr assistant. How can I help you today?</div>
+                    <div class="ar-msg__bubble">Hi! I'm your JavaClaw assistant. How can I help you today?</div>
                 </article>
             </div>
             <div id="typing-indicator"></div>
@@ -188,7 +188,7 @@
                 <div class="field is-grouped" style="align-items: flex-end; margin: 0;">
                     <div class="control is-expanded">
                         <textarea id="message-input" class="textarea" name="message" rows="1"
-                            placeholder="Message AgentRunr…"
+                            placeholder="Message JavaClaw…"
                             autocomplete="off" spellcheck="true" autofocus
                             hx-trigger="keydown[key=='Enter'&&!shiftKey] consume"
                             ws-send></textarea>

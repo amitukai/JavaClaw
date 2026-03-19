@@ -1,13 +1,13 @@
 ---
 name: skill-creator
-description: Create new skills, modify and improve existing skills for AgentRunr. Use when users want to create a skill from scratch, edit or improve an existing skill, or refine a skill's description so it triggers more reliably. Also use when a user asks to "turn this workflow into a skill", "save these instructions as a skill", or "make the agent better at X".
+description: Create new skills, modify and improve existing skills for JavaClaw. Use when users want to create a skill from scratch, edit or improve an existing skill, or refine a skill's description so it triggers more reliably. Also use when a user asks to "turn this workflow into a skill", "save these instructions as a skill", or "make the agent better at X".
 ---
 
 # Skill Creator
 
-A skill for creating and iteratively improving AgentRunr skills.
+A skill for creating and iteratively improving JavaClaw skills.
 
-Skills in AgentRunr live at `workspace/skills/<skill-name>/SKILL.md` and are loaded dynamically by the `SkillsTool` at runtime. The agent picks them up automatically — no restart needed.
+Skills in JavaClaw live at `workspace/skills/<skill-name>/SKILL.md` and are loaded dynamically by the `SkillsTool` at runtime. The agent picks them up automatically — no restart needed.
 
 The core loop:
 1. Understand what the skill should do
@@ -51,7 +51,7 @@ workspace/skills/
     └── SKILL.md   ← required; keep under ~300 lines
 ```
 
-AgentRunr skills are single-file. The agent reads `SKILL.md` when the skill triggers. Keep it focused and readable — a dense wall of text is harder to follow than clear, structured instructions.
+JavaClaw skills are single-file. The agent reads `SKILL.md` when the skill triggers. Keep it focused and readable — a dense wall of text is harder to follow than clear, structured instructions.
 
 #### Writing patterns
 
