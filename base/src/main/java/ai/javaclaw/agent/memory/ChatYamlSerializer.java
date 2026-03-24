@@ -4,6 +4,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -18,17 +19,34 @@ import java.util.stream.Collectors;
  * Serialises and deserialises a list of Spring AI {@link Message} objects to/from
  * a YAML block-list string, for use as the body of a {@link ai.javaclaw.files.YamlDocument}.
  *
- * <p>Format (one entry per message, role is the key):
+ * <p>Format:
  * <pre>
- * - user: |
- *     Question text
- * - assistant: |
- *     Answer text
+ * - role: user
+ *   content: "Question text"
+ * - role: assistant
+ *   tool_calls:
+ *     - id: call_123
+ *       type: function
+ *       function: get_weather
+ *       arguments: '{"location": "London"}'
+ * - role: tool
+ *   tool_call_id: call_123
+ *   name: get_weather
+ *   content: "Sunny, 20°C"
+ * - role: assistant
+ *   content: "Here is the weather..."
+ * </pre>
+ *
+ * <p>Legacy format (one entry per message, role is the key) is still supported on read:
+ * <pre>
+ * - user: Question text
+ * - assistant: Answer text
  * </pre>
  */
 class ChatYamlSerializer {
 
-    private static final Set<MessageType> PERSISTABLE_MESSAGES = Set.of(MessageType.USER, MessageType.ASSISTANT, MessageType.SYSTEM);
+    private static final Set<MessageType> PERSISTABLE_MESSAGES =
+            Set.of(MessageType.USER, MessageType.ASSISTANT, MessageType.SYSTEM, MessageType.TOOL);
 
     private ChatYamlSerializer() {}
 
@@ -37,26 +55,19 @@ class ChatYamlSerializer {
             return List.of();
         }
         Yaml yaml = new Yaml();
-        List<Map<String, String>> entries = yaml.load(body);
+        List<Map<String, Object>> entries = yaml.load(body);
         if (entries == null) {
             return List.of();
         }
         return entries.stream()
-                .map(entry -> {
-                    Map.Entry<String, String> first = entry.entrySet().iterator().next();
-                    return toMessage(first.getKey(), first.getValue());
-                })
+                .map(ChatYamlSerializer::toMessage)
                 .collect(Collectors.toList());
     }
 
     static String serialize(List<Message> messages) {
-        List<Map<String, String>> entries = messages.stream()
-                .filter(msg -> PERSISTABLE_MESSAGES.contains(msg.getMessageType()) && msg.getText() != null)
-                .map(msg -> {
-                    Map<String, String> entry = new LinkedHashMap<>();
-                    entry.put(msg.getMessageType().getValue(), msg.getText());
-                    return entry;
-                })
+        List<Map<String, Object>> entries = messages.stream()
+                .filter(msg -> PERSISTABLE_MESSAGES.contains(msg.getMessageType()))
+                .flatMap(msg -> toEntries(msg).stream())
                 .collect(Collectors.toList());
 
         DumperOptions options = new DumperOptions();
@@ -65,7 +76,95 @@ class ChatYamlSerializer {
         return new Yaml(options).dump(entries);
     }
 
-    private static Message toMessage(String role, String content) {
+    private static List<Map<String, Object>> toEntries(Message msg) {
+        if (msg instanceof AssistantMessage assistantMsg && assistantMsg.hasToolCalls()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("role", "assistant");
+            if (assistantMsg.getText() != null && !assistantMsg.getText().isBlank()) {
+                entry.put("content", assistantMsg.getText());
+            }
+            List<Map<String, String>> toolCallList = assistantMsg.getToolCalls().stream()
+                    .map(tc -> {
+                        Map<String, String> tcMap = new LinkedHashMap<>();
+                        tcMap.put("id", tc.id());
+                        tcMap.put("type", tc.type());
+                        tcMap.put("function", tc.name());
+                        tcMap.put("arguments", tc.arguments());
+                        return tcMap;
+                    })
+                    .collect(Collectors.toList());
+            entry.put("tool_calls", toolCallList);
+            return List.of(entry);
+        }
+        if (msg instanceof ToolResponseMessage toolMsg) {
+            return toolMsg.getResponses().stream()
+                    .map(tr -> {
+                        Map<String, Object> entry = new LinkedHashMap<>();
+                        entry.put("role", "tool");
+                        entry.put("tool_call_id", tr.id());
+                        entry.put("name", tr.name());
+                        entry.put("content", tr.responseData());
+                        return entry;
+                    })
+                    .collect(Collectors.toList());
+        }
+        // USER, ASSISTANT (text only), SYSTEM
+        if (msg.getText() == null) {
+            return List.of();
+        }
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("role", msg.getMessageType().getValue());
+        entry.put("content", msg.getText());
+        return List.of(entry);
+    }
+
+    private static Message toMessage(Map<String, Object> entry) {
+        // Support legacy format: {user: "text"} or {assistant: "text"}
+        if (!entry.containsKey("role")) {
+            Map.Entry<String, Object> first = entry.entrySet().iterator().next();
+            return toLegacyMessage(first.getKey(), (String) first.getValue());
+        }
+        String role = (String) entry.get("role");
+        return switch (role) {
+            case "user" -> new UserMessage((String) entry.get("content"));
+            case "system" -> new SystemMessage((String) entry.get("content"));
+            case "assistant" -> toAssistantMessage(entry);
+            case "tool" -> toToolMessage(entry);
+            default -> throw new IllegalArgumentException("Unknown role in chat history: " + role);
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static AssistantMessage toAssistantMessage(Map<String, Object> entry) {
+        String content = (String) entry.get("content");
+        List<Map<String, String>> rawToolCalls = (List<Map<String, String>>) entry.get("tool_calls");
+        if (rawToolCalls == null || rawToolCalls.isEmpty()) {
+            return new AssistantMessage(content != null ? content : "");
+        }
+        List<AssistantMessage.ToolCall> toolCalls = rawToolCalls.stream()
+                .map(tc -> new AssistantMessage.ToolCall(
+                        tc.get("id"),
+                        tc.getOrDefault("type", "function"),
+                        tc.get("function"),
+                        tc.get("arguments")))
+                .collect(Collectors.toList());
+        return AssistantMessage.builder()
+                .content(content != null ? content : "")
+                .toolCalls(toolCalls)
+                .build();
+    }
+
+    private static ToolResponseMessage toToolMessage(Map<String, Object> entry) {
+        ToolResponseMessage.ToolResponse response = new ToolResponseMessage.ToolResponse(
+                (String) entry.get("tool_call_id"),
+                (String) entry.get("name"),
+                (String) entry.get("content"));
+        return ToolResponseMessage.builder()
+                .responses(List.of(response))
+                .build();
+    }
+
+    private static Message toLegacyMessage(String role, String content) {
         return switch (role) {
             case "user" -> new UserMessage(content);
             case "assistant" -> new AssistantMessage(content);
