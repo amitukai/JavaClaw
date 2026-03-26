@@ -94,11 +94,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         );
 
         // Call agent (blocking — background tasks may push messages via ChatChannel during this)
-        String response = chatChannel.chat(conversationId, userMessage);
+        ChatChannel.ChatResult result = chatChannel.chat(conversationId, userMessage);
 
-        // Send agent response + clear typing indicator
+        // Send agent response (with thinking row if tool calls were made) + clear typing indicator
         chatChannel.sendHtml(
-                Htmx.oobAppend("chat-messages", ChatHtml.agentBubble(response)) +
+                Htmx.oobAppend("chat-messages", ChatHtml.agentTurn(result.text(), result.toolSteps())) +
                 Htmx.oobReplace("typing-indicator", "")
         );
     }
